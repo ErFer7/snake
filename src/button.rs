@@ -1,6 +1,6 @@
 use termion::color::Rgb;
 
-use crate::{cell_matrix::CellMatrix, state_machine::Event, text::{Alignment, Text}};
+use crate::{cell_matrix::CellMatrix, events::Event, text::{Alignment, Text}};
 
 pub struct Button {
     text: Text,

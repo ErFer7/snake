@@ -2,14 +2,17 @@ use crate::{
     button::Button,
     cell::Color,
     cell_matrix::CellMatrix,
-    scene::{ButtonInteractableScene, Scene},
-    state_machine::{Event, State},
+    events::Event,
+    global_context::GameplayContext,
+    scene::{ButtonInteractableScene, Scene, UpdateResult},
     terminal::Terminal,
     text::{Alignment, Text},
     world::generate_walls,
+    VERSION,
 };
 
 pub struct UiScene {
+    name: String,
     cell_matrix: CellMatrix,
     texts: Vec<Text>,
     buttons: Vec<Button>,
@@ -17,11 +20,12 @@ pub struct UiScene {
 }
 
 impl Scene for UiScene {
-    fn new(width: u16, height: u16) -> Self {
+    fn new(name: String, width: u16, height: u16) -> Self {
         let mut ui_cell_matrix = CellMatrix::new(width, height);
         generate_walls(&mut ui_cell_matrix, width, height);
 
         UiScene {
+            name,
             cell_matrix: ui_cell_matrix,
             texts: Vec::new(),
             buttons: Vec::new(),
@@ -29,12 +33,20 @@ impl Scene for UiScene {
         }
     }
 
+    fn name(&self) -> String {
+        return self.name.clone();
+    }
+
     fn add_text(&mut self, text: Text) {
         self.texts.push(text);
         self.texts.last().unwrap().render(&mut self.cell_matrix);
     }
 
-    fn update(&mut self, terminal: &mut Terminal, state: &mut State) {
+    fn update(
+        &mut self,
+        terminal: &mut Terminal,
+        gameplay_context: GameplayContext,
+    ) -> UpdateResult {
         let pressed_key = terminal.get_pressed_key();
 
         match pressed_key {
@@ -57,13 +69,15 @@ impl Scene for UiScene {
             Some(termion::event::Key::Char('\n')) => {
                 let event = self.buttons[self.selected_button].event();
                 self.selected_button = 0;
-                *state = state.transition(event);
+                return UpdateResult::new(event, gameplay_context);
             }
             Some(termion::event::Key::Esc) => {
-                *state = state.transition(Event::Exit);
+                return UpdateResult::new(Event::Exit, gameplay_context);
             }
             _ => (),
         }
+
+        return UpdateResult::none(gameplay_context);
     }
 
     fn print(&mut self) {
@@ -88,7 +102,7 @@ impl ButtonInteractableScene for UiScene {
 }
 
 pub fn build_main_menu_scene(width: u16, height: u16) -> UiScene {
-    let mut ui_scene = UiScene::new(width, height);
+    let mut ui_scene = UiScene::new("main_menu".to_string(), width, height);
 
     let title = Text::new(
         0,
@@ -119,7 +133,7 @@ pub fn build_main_menu_scene(width: u16, height: u16) -> UiScene {
     );
 
     let exit = Button::new(
-        -1,
+        0,
         -3,
         Alignment::Center,
         "EXIT".to_string(),
@@ -134,7 +148,7 @@ pub fn build_main_menu_scene(width: u16, height: u16) -> UiScene {
         0,
         -3,
         Alignment::Bottom,
-        "v0.1.0".to_string(),
+        VERSION.to_string(),
         width,
         height,
         Color::LightCyan.to_rgb(),
@@ -161,7 +175,7 @@ pub fn build_main_menu_scene(width: u16, height: u16) -> UiScene {
 }
 
 pub fn build_paused_scene(width: u16, height: u16) -> UiScene {
-    let mut ui_scene = UiScene::new(width, height);
+    let mut ui_scene = UiScene::new("paused".to_string(), width, height);
 
     let title = Text::new(
         0,
@@ -191,9 +205,21 @@ pub fn build_paused_scene(width: u16, height: u16) -> UiScene {
         Event::Resume,
     );
 
-    let exit = Button::new(
-        -1,
+    let restart = Button::new(
+        0,
         -3,
+        Alignment::Center,
+        "RESTART".to_string(),
+        width,
+        height,
+        Color::White.to_rgb(),
+        Color::LightGreen.to_rgb(),
+        Event::Restart,
+    );
+
+    let exit = Button::new(
+        0,
+        -1,
         Alignment::Center,
         "END".to_string(),
         width,
@@ -205,33 +231,46 @@ pub fn build_paused_scene(width: u16, height: u16) -> UiScene {
 
     ui_scene.add_text(title);
     ui_scene.add_button(resume);
+    ui_scene.add_button(restart);
     ui_scene.add_button(exit);
 
     return ui_scene;
 }
 
 pub fn build_game_over_scene(width: u16, height: u16) -> UiScene {
-    let mut ui_scene = UiScene::new(width, height);
+    let mut ui_scene = UiScene::new("game_over".to_string(), width, height);
 
     let title = Text::new(
         0,
         5,
         Alignment::Top,
-        "██████╗  █████╗ ███╗   ███╗███████╗     ██████╗ ██╗   ██╗███████╗██████╗ \n\
+        " ██████╗  █████╗ ███╗   ███╗███████╗     ██████╗ ██╗   ██╗███████╗██████╗ \n\
          ██╔════╝ ██╔══██╗████╗ ████║██╔════╝    ██╔═══██╗██║   ██║██╔════╝██╔══██╗\n\
          ██║  ███╗███████║██╔████╔██║█████╗      ██║   ██║██║   ██║█████╗  ██████╔╝\n\
          ██║   ██║██╔══██║██║╚██╔╝██║██╔══╝      ██║   ██║╚██╗ ██╔╝██╔══╝  ██╔══██╗\n\
          ╚██████╔╝██║  ██║██║ ╚═╝ ██║███████╗    ╚██████╔╝ ╚████╔╝ ███████╗██║  ██║\n\
-         ╚═════╝ ╚═╝  ╚═╝╚═╝     ╚═╝╚══════╝     ╚═════╝   ╚═══╝  ╚══════╝╚═╝  ╚═╝"
+         \x20╚═════╝ ╚═╝  ╚═╝╚═╝     ╚═╝╚══════╝     ╚═════╝   ╚═══╝  ╚══════╝╚═╝  ╚═╝"
             .to_string(),
         width,
         height,
         Color::LightRed.to_rgb(),
     );
 
-    let exit = Button::new(
+    let restart = Button::new(
         0,
-        -5,
+        -3,
+        Alignment::Center,
+        "RESTART".to_string(),
+        width,
+        height,
+        Color::White.to_rgb(),
+        Color::LightGreen.to_rgb(),
+        Event::Restart,
+    );
+
+    let menu = Button::new(
+        0,
+        -1,
         Alignment::Center,
         "MENU".to_string(),
         width,
@@ -242,7 +281,8 @@ pub fn build_game_over_scene(width: u16, height: u16) -> UiScene {
     );
 
     ui_scene.add_text(title);
-    ui_scene.add_button(exit);
+    ui_scene.add_button(restart);
+    ui_scene.add_button(menu);
 
     return ui_scene;
 }

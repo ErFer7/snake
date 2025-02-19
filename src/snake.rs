@@ -1,5 +1,3 @@
-use std::ptr::null;
-
 use crate::{
     cell::{Cell, CellType, Color},
     cell_matrix::CellMatrix,
@@ -81,9 +79,5 @@ impl Snake {
             Direction::Left => (head_x - 1, head_y),
             Direction::Right => (head_x + 1, head_y),
         }
-    }
-
-    pub fn head_position(&self) -> (u16, u16) {
-        self.body[0]
     }
 }

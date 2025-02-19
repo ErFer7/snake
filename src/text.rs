@@ -17,13 +17,10 @@ pub enum Alignment {
 }
 
 pub struct Text {
-    x: i32,
-    y: i32,
     aligned_x: u16,
     aligned_y: u16,
     width: u16,
     height: u16,
-    alignment: Alignment,
     string: String,
     color: Rgb,
 }
@@ -50,13 +47,10 @@ impl Text {
         );
 
         return Text {
-            x,
-            y,
             aligned_x: (aligned_offset.0 as i32 + x) as u16,
             aligned_y: (aligned_offset.1 as i32 + y) as u16,
             width,
             height,
-            alignment,
             string,
             color,
         };
@@ -68,22 +62,6 @@ impl Text {
 
     pub fn set_string(&mut self, string: String) {
         self.string = string;
-
-        let size = calculated_string_box_size(&self.string);
-
-        self.width = size.0;
-        self.height = size.1;
-
-        let aligned_offset = calculated_aligned_offset(
-            self.alignment.clone(),
-            self.width,
-            self.height,
-            self.width,
-            self.height,
-        );
-
-        self.aligned_x = (aligned_offset.0 as i32 + self.x) as u16;
-        self.aligned_y = (aligned_offset.1 as i32 + self.y) as u16;
     }
 
     pub fn render(&self, cell_matrix: &mut CellMatrix) {
