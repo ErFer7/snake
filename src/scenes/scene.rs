@@ -1,9 +1,8 @@
 use crate::{
-    button::Button,
     events::Event,
     global_context::GameplayContext,
     terminal::Terminal,
-    text::Text,
+    ui::{button::Button, text::Text},
 };
 
 pub trait Scene {
@@ -17,7 +16,9 @@ pub trait Scene {
         terminal: &mut Terminal,
         gameplay_context: GameplayContext,
     ) -> UpdateResult;
-    fn print(&mut self);
+    fn render_texts(&mut self);
+    fn render(&mut self);
+    fn write(&mut self, terminal: &mut Terminal);
 }
 
 pub struct UpdateResult {
@@ -47,9 +48,4 @@ impl UpdateResult {
     pub fn gameplay_context(&self) -> GameplayContext {
         self.gameplay_context.clone()
     }
-}
-
-pub trait ButtonInteractableScene {
-    fn add_button(&mut self, button: Button);
-    fn render_buttons(&mut self);
 }

@@ -1,13 +1,12 @@
 use std::collections::HashMap;
 
 use crate::{
-    events::Event,
-    scene::{Scene, UpdateResult},
+    events::Event, scenes::scene::{Scene, UpdateResult},
 };
 
 pub struct GlobalContext {
-    current_scene: Option<Box<dyn Scene>>,
     scenes: HashMap<String, Box<dyn Scene>>,
+    current_scene: Option<Box<dyn Scene>>,
     gameplay_context: GameplayContext,
     exit: bool,
 }
@@ -20,8 +19,8 @@ pub struct GameplayContext {
 impl GlobalContext {
     pub fn new() -> Self {
         Self {
-            current_scene: None,
             scenes: HashMap::new(),
+            current_scene: None,
             gameplay_context: GameplayContext {
                 score: 0,
                 start_new_game: true,
@@ -46,6 +45,7 @@ impl GlobalContext {
             }
 
             self.current_scene = Some(scene);
+            self.current_scene.as_mut().unwrap().render();
         }
     }
 

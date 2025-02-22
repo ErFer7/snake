@@ -39,17 +39,25 @@ impl Terminal {
 
     pub fn hide_cursor(&mut self) {
         write!(self.stdout, "{}", cursor::Hide).unwrap();
-        self.stdout.flush().unwrap();
+        self.flush();
     }
 
     pub fn show_cursor(&mut self) {
         write!(self.stdout, "{}", cursor::Show).unwrap();
+        self.flush();
+    }
+
+    pub fn write(&mut self, text: &str) {
+        write!(self.stdout, "{}", text).unwrap();
+    }
+
+    pub fn flush(&mut self) {
         self.stdout.flush().unwrap();
     }
 
     pub fn clear(&mut self) {
         write!(self.stdout, "{}", termion::clear::All).unwrap();
-        self.stdout.flush().unwrap();
+        self.flush();
     }
 
     pub fn get_pressed_key(&mut self) -> Option<Key> {

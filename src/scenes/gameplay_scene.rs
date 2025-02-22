@@ -1,45 +1,46 @@
 use rand::Rng;
 
 use crate::{
-    cell::{Cell, CellType, Color},
-    cell_matrix::CellMatrix,
+    cells::{
+        cell::{Cell, CellType},
+        cell_matrix::CellMatrix,
+        color::Color,
+        vector::VectorU16,
+    },
     events::Event,
+    gameplay::snake::Snake,
     global_context::GameplayContext,
-    scene::{Scene, UpdateResult},
-    snake::{Direction, Snake},
     terminal::Terminal,
-    text::{Alignment, Text},
-    world::generate_walls,
+    ui::{text::Text, ui_element::Alignment},
+    wall::Wall,
     SNAKE_SPEED,
 };
+
+use super::scene::{Scene, UpdateResult};
 
 pub struct GameplayScene {
     name: String,
     cell_matrix: CellMatrix,
     texts: Vec<Text>,
-    score: u32,
     fruit_position: (u16, u16),
     snake: Snake,
+    wall: Wall,
 }
 
 impl Scene for GameplayScene {
     fn new(name: String, width: u16, height: u16) -> Self {
-        let mut cell_matrix = CellMatrix::new(width, height);
-        generate_walls(&mut cell_matrix, width, height);
-
         GameplayScene {
             name,
-            cell_matrix,
+            cell_matrix: CellMatrix::new(width, height),
             texts: Vec::new(),
-            score: 0,
             fruit_position: (0, 0),
             snake: Snake::new(0, 0, 0.0),
+            wall: Wall::new(width, height),
         }
     }
 
     fn add_text(&mut self, text: Text) {
         self.texts.push(text);
-        self.texts.last().unwrap().render(&mut self.cell_matrix);
     }
 
     fn update(
@@ -48,47 +49,30 @@ impl Scene for GameplayScene {
         gameplay_context: GameplayContext,
     ) -> UpdateResult {
         if gameplay_context.start_new_game() {
-            self.start_gameplay();
+            self.snake = Snake::new(
+                self.cell_matrix.width() / 2,
+                self.cell_matrix.height() / 2,
+                SNAKE_SPEED,
+            );
+            self.generate_fruit(self.cell_matrix.width(), self.cell_matrix.height());
 
             return UpdateResult::none(GameplayContext::new_game_started(gameplay_context));
         }
 
         self.snake.render(&mut self.cell_matrix);
-        self.render_score_text();
 
         let pressed_key = terminal.get_pressed_key();
 
-        match pressed_key {
-            Some(termion::event::Key::Up) => {
-                if self.snake.direction() != Direction::Down {
-                    self.snake.change_direction(Direction::Up);
-                }
-            }
-            Some(termion::event::Key::Down) => {
-                if self.snake.direction() != Direction::Up {
-                    self.snake.change_direction(Direction::Down);
-                }
-            }
-            Some(termion::event::Key::Left) => {
-                if self.snake.direction() != Direction::Right {
-                    self.snake.change_direction(Direction::Left);
-                }
-            }
-            Some(termion::event::Key::Right) => {
-                if self.snake.direction() != Direction::Left {
-                    self.snake.change_direction(Direction::Right);
-                }
-            }
-            Some(termion::event::Key::Esc) => {
-                return UpdateResult::new(Event::Pause, gameplay_context);
-            }
-            _ => (),
+        if pressed_key == Some(termion::event::Key::Esc) {
+            return UpdateResult::new(Event::Pause, gameplay_context);
         }
+
+        self.snake.update(pressed_key);
 
         let head_position = self.snake.move_forward();
 
         if let Some((x, y)) = head_position {
-            if let Some(cell) = self.cell_matrix.get_cell(x, y) {
+            if let Some(cell) = self.cell_matrix.get_cell(VectorU16::new(x, y)) {
                 match cell.cell_type() {
                     CellType::Solid | CellType::Snake => {
                         return UpdateResult::new(Event::End, gameplay_context);
@@ -97,6 +81,7 @@ impl Scene for GameplayScene {
                         self.snake.grow();
                         self.texts[1].set_string(format!("{:010}", gameplay_context.score() + 1));
                         self.generate_fruit(self.cell_matrix.width(), self.cell_matrix.height());
+                        self.render_score_text();
 
                         return UpdateResult::none(GameplayContext::new_incremented(
                             gameplay_context,
@@ -110,36 +95,28 @@ impl Scene for GameplayScene {
         return UpdateResult::none(gameplay_context);
     }
 
-    fn print(&mut self) {
-        self.cell_matrix.print();
-        self.cell_matrix.clear_type(CellType::Snake);
+    fn write(&mut self, terminal: &mut Terminal) {
+        self.cell_matrix.write(terminal);
     }
 
     fn name(&self) -> String {
         return self.name.clone();
     }
+
+    fn render_texts(&mut self) {
+        for text in self.texts.iter_mut() {
+            text.render(&mut self.cell_matrix);
+        }
+    }
+
+    fn render(&mut self) {
+        self.cell_matrix.clear();
+        self.wall.render(&mut self.cell_matrix);
+        self.render_texts();
+    }
 }
 
 impl GameplayScene {
-    pub fn start_gameplay(&mut self) {
-        self.cell_matrix.clear();
-
-        let width = self.cell_matrix.width();
-        let height = self.cell_matrix.height();
-
-        generate_walls(&mut self.cell_matrix, width, height - 1);
-
-        self.render_score_text();
-
-        self.snake = Snake::new(
-            self.cell_matrix.width() / 2,
-            self.cell_matrix.height() / 2,
-            SNAKE_SPEED,
-        );
-        self.score = 0;
-        self.generate_fruit(self.cell_matrix.width(), self.cell_matrix.height());
-    }
-
     fn generate_fruit(&mut self, width: u16, height: u16) {
         loop {
             let mut rng = rand::rng();
@@ -150,12 +127,11 @@ impl GameplayScene {
 
             if let Some(cell) = self
                 .cell_matrix
-                .get_cell(self.fruit_position.0, self.fruit_position.1)
+                .get_cell(VectorU16::new(self.fruit_position.0, self.fruit_position.1))
             {
                 if cell.cell_type() == CellType::Empty {
                     self.cell_matrix.set_cell(
-                        x,
-                        y,
+                        VectorU16::new(x, y),
                         Cell::new('█', Color::Red.to_rgb(), CellType::Fruit),
                     );
                     break;
@@ -175,6 +151,7 @@ pub fn build_gameplay_scene(width: u16, height: u16) -> GameplayScene {
     let mut gameplay_scene = GameplayScene::new("gameplay".to_string(), width, height);
 
     let score_label = Text::new(
+        "score_label".to_string(),
         0,
         0,
         Alignment::BottomLeft,
@@ -185,6 +162,7 @@ pub fn build_gameplay_scene(width: u16, height: u16) -> GameplayScene {
     );
 
     let score = Text::new(
+        "score".to_string(),
         7,
         0,
         Alignment::BottomLeft,
@@ -196,6 +174,8 @@ pub fn build_gameplay_scene(width: u16, height: u16) -> GameplayScene {
 
     gameplay_scene.add_text(score_label);
     gameplay_scene.add_text(score);
+
+    gameplay_scene.render();
 
     return gameplay_scene;
 }

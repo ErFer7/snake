@@ -1,25 +1,22 @@
-mod button;
-mod cell;
-mod cell_matrix;
+mod cells;
 mod chronometer;
 mod events;
-mod gameplay_scene;
+mod gameplay;
 mod global_context;
-mod scene;
-mod snake;
+mod scenes;
 mod terminal;
-mod text;
-mod ui_scene;
-mod world;
+mod ui;
+mod wall;
 
 use chronometer::Chronometer;
 use global_context::GlobalContext;
+use scenes::{gameplay_scene, ui_scene};
 use terminal::Terminal;
 
 const MINIMUM_WIDTH: u16 = 80;
-const MINIMUM_HEIGHT: u16 = 35;
+const MINIMUM_HEIGHT: u16 = 45;
 const FPS: u32 = 75;
-const SNAKE_SPEED: f32 = 25.0;
+const SNAKE_SPEED: f32 = 15.0;
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 fn main() {
@@ -56,7 +53,8 @@ fn main() {
         let gameplay_context = global_context.gameplay_context();
         let current_scene = global_context.current_scene_mut().as_mut().unwrap();
 
-        current_scene.print();
+        current_scene.write(&mut terminal);
+        terminal.flush();
 
         let update_result = current_scene.update(&mut terminal, gameplay_context);
 
