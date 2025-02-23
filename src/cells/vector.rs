@@ -1,23 +1,34 @@
+use num_traits::PrimInt;
+
 #[derive(Eq, Hash, PartialEq, Clone)]
-pub struct VectorU16 {
-    x: u16,
-    y: u16,
+pub struct Vector<T>
+where
+    T: PrimInt,
+{
+    x: T,
+    y: T,
 }
 
-impl VectorU16 {
-    pub fn new(x: u16, y: u16) -> VectorU16 {
-        return VectorU16 { x, y };
+impl<T> Vector<T>
+where
+    T: PrimInt,
+{
+    pub fn new(x: T, y: T) -> Vector<T> {
+        Vector { x, y }
     }
 
-    pub fn zero() -> VectorU16 {
-        return VectorU16 { x: 0, y: 0 };
+    pub fn zero() -> Vector<T> {
+        Vector {
+            x: T::zero(),
+            y: T::zero(),
+        }
     }
 
-    pub fn x(&self) -> u16 {
+    pub fn x(&self) -> T {
         return self.x;
     }
 
-    pub fn y(&self) -> u16 {
+    pub fn y(&self) -> T {
         return self.y;
     }
 }

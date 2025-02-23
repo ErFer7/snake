@@ -5,6 +5,7 @@ use std::{
 
 pub struct Chronometer {
     frame_duration: Duration,
+    real_frame_duration: Duration,
     last_update: Instant,
 }
 
@@ -15,6 +16,7 @@ impl Chronometer {
 
         return Chronometer {
             frame_duration,
+            real_frame_duration: frame_duration,
             last_update,
         };
     }
@@ -25,11 +27,16 @@ impl Chronometer {
         let elapsed = now - self.last_update;
 
         if elapsed >= self.frame_duration {
+            self.real_frame_duration = elapsed;
             self.last_update = now;
             return true;
         }
 
         thread::sleep(Duration::from_millis(1));
         return false;
+    }
+
+    pub fn current_fps(&self) -> f64 {
+        return 1.0 / self.real_frame_duration.as_secs_f64();
     }
 }

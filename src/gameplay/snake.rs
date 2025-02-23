@@ -6,9 +6,9 @@ use crate::{
         cell_group::{self, CellGroup},
         cell_matrix::CellMatrix,
         color::Color,
-        vector::VectorU16,
+        vector::Vector,
     },
-    FPS,
+    FPS, INITIAL_SNAKE_LENGTH,
 };
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -20,7 +20,7 @@ pub enum Direction {
 }
 
 pub struct Snake {
-    body: Vec<(u16, u16)>,
+    body: Vec<Vector<u16>>,
     direction: Direction,
     speed: f32,
     movement_accumulator: f32,
@@ -28,58 +28,54 @@ pub struct Snake {
 }
 
 impl Snake {
-    pub fn new(x: u16, y: u16, speed: f32) -> Snake {
-        let mut cell_group = cell_group::CellGroup::new();
+    pub fn new(position: Vector<u16>, speed: f32) -> Snake {
+        let mut body = Vec::new();
 
-        cell_group.set_cell(
-            VectorU16::new(x, y),
-            Cell::new('█', Color::Green.to_rgb(), CellType::Snake),
-        );
+        for i in 0..INITIAL_SNAKE_LENGTH {
+            body.push(Vector::<u16>::new(position.x(), position.y() + i));
+        }
 
         Snake {
-            body: vec![(x, y)],
-            direction: Direction::Right,
+            body,
+            direction: Direction::Up,
             speed,
             movement_accumulator: 0.0,
-            cell_group,
+            cell_group: cell_group::CellGroup::new(),
         }
     }
 
-    pub fn move_forward(&mut self) -> Option<(u16, u16)> {
+    pub fn none() -> Snake {
+        Snake {
+            body: Vec::new(),
+            direction: Direction::Up,
+            speed: 0.0,
+            movement_accumulator: 0.0,
+            cell_group: cell_group::CellGroup::new(),
+        }
+    }
+
+    pub fn move_forward(&mut self) -> Option<Vector<u16>> {
         self.movement_accumulator += self.speed / FPS as f32;
 
         if self.movement_accumulator >= 1.0 {
             self.movement_accumulator = 0.0;
 
-            let new_head_position = self.new_head_position();
+            let new_head = self.new_head();
 
-            self.body.insert(0, new_head_position);
-            let tail = self.body.pop();
+            self.body.insert(0, new_head.clone());
+            self.cell_group
+                .set_cell(self.body.pop().unwrap(), Cell::new_empty());
 
-            self.cell_group.set_cell(
-                VectorU16::new(new_head_position.0, new_head_position.1),
-                Cell::new('█', Color::Green.to_rgb(), CellType::Snake),
-            );
-            self.cell_group.set_cell(
-                VectorU16::new(tail.unwrap().0, tail.unwrap().1),
-                Cell::new_empty(),
-            );
-
-            return Some(new_head_position);
+            return Some(new_head);
         }
 
         return None;
     }
 
     pub fn grow(&mut self) {
-        let new_head = self.new_head_position();
+        let new_head = self.new_head();
 
         self.body.insert(0, new_head);
-
-        self.cell_group.set_cell(
-            VectorU16::new(new_head.0, new_head.1),
-            Cell::new('█', Color::Green.to_rgb(), CellType::Snake),
-        );
     }
 
     pub fn update(&mut self, pressed_key: Option<Key>) {
@@ -113,17 +109,36 @@ impl Snake {
     }
 
     pub fn render(&mut self, cell_matrix: &mut CellMatrix) {
+        for i in 0..self.body.len() {
+            let char = match i % 4 {
+                0 => '█',
+                1 => '▓',
+                2 => '▒',
+                3 => '░',
+                _ => '?',
+            };
+
+            self.set_cell(self.body[i].clone(), char);
+        }
+
         self.cell_group.render(cell_matrix);
     }
 
-    fn new_head_position(&self) -> (u16, u16) {
-        let (head_x, head_y) = self.body[0];
+    fn new_head(&self) -> Vector<u16> {
+        let head = self.body[0].clone();
 
-        match self.direction {
-            Direction::Up => (head_x, head_y - 1),
-            Direction::Down => (head_x, head_y + 1),
-            Direction::Left => (head_x - 1, head_y),
-            Direction::Right => (head_x + 1, head_y),
-        }
+        return match self.direction {
+            Direction::Up => Vector::<u16>::new(head.x(), head.y() - 1),
+            Direction::Down => Vector::<u16>::new(head.x(), head.y() + 1),
+            Direction::Left => Vector::<u16>::new(head.x() - 1, head.y()),
+            Direction::Right => Vector::<u16>::new(head.x() + 1, head.y()),
+        };
+    }
+
+    fn set_cell(&mut self, position: Vector<u16>, char: char) {
+        self.cell_group.set_cell(
+            position,
+            Cell::new(char, Color::Green.to_rgb(), CellType::Snake),
+        );
     }
 }

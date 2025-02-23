@@ -1,6 +1,6 @@
 use termion::color::Rgb;
 
-use crate::{cells::cell_matrix::CellMatrix, events::Event, ui::text::Text};
+use crate::{cells::{cell_matrix::CellMatrix, vector::Vector}, core::events::Event, ui::text::Text};
 
 use super::ui_element::Alignment;
 
@@ -14,8 +14,7 @@ pub struct Button {
 impl Button {
     pub fn new(
         name: String,
-        x: i32,
-        y: i32,
+        position: Vector<i32>,
         alignment: Alignment,
         string: String,
         cell_matrix_width: u16,
@@ -26,8 +25,7 @@ impl Button {
     ) -> Button {
         let text = Text::new(
             name,
-            x,
-            y,
+            position,
             alignment,
             string,
             cell_matrix_width,

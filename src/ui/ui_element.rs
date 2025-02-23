@@ -1,5 +1,6 @@
-use crate::cells::{cell_group::CellGroup, cell_matrix::CellMatrix};
+use crate::cells::{cell_group::CellGroup, cell_matrix::CellMatrix, vector::Vector};
 
+#[allow(dead_code)]
 #[derive(Clone)]
 pub enum Alignment {
     TopLeft,
@@ -15,8 +16,7 @@ pub enum Alignment {
 
 pub struct UiElement {
     name: String,
-    aligned_x: u16,
-    aligned_y: u16,
+    aligned_position: Vector<u16>,
     width: u16,
     height: u16,
     cell_group: CellGroup,
@@ -25,8 +25,7 @@ pub struct UiElement {
 impl UiElement {
     pub fn new(
         name: String,
-        x: i32,
-        y: i32,
+        position: Vector<i32>,
         alignment: Alignment,
         width: u16,
         height: u16,
@@ -55,8 +54,10 @@ impl UiElement {
 
         UiElement {
             name,
-            aligned_x: (x_offset as i32 + x) as u16,
-            aligned_y: (y_offset as i32 + y) as u16,
+            aligned_position: Vector::<u16>::new(
+                (x_offset as i32 + position.x()) as u16,
+                (y_offset as i32 + position.y()) as u16,
+            ),
             width,
             height,
             cell_group: CellGroup::new(),
@@ -67,12 +68,8 @@ impl UiElement {
         return self.name.clone();
     }
 
-    pub fn aligned_x(&self) -> u16 {
-        self.aligned_x
-    }
-
-    pub fn aligned_y(&self) -> u16 {
-        self.aligned_y
+    pub fn aligned_position(&self) -> Vector<u16> {
+        return self.aligned_position.clone();
     }
 
     pub fn width(&self) -> u16 {

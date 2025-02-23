@@ -1,5 +1,6 @@
 use termion::color;
 
+#[allow(dead_code)]
 pub enum Color {
     Black,
     Red,

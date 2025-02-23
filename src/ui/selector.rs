@@ -1,6 +1,6 @@
 use termion::event::Key;
 
-use crate::{cells::cell_matrix::CellMatrix, events::Event};
+use crate::{cells::cell_matrix::CellMatrix, core::events::Event};
 
 use super::button::Button;
 

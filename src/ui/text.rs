@@ -2,7 +2,7 @@ use termion::color::Rgb;
 
 use crate::cells::cell_group::CellGroup;
 use crate::cells::cell_matrix::CellMatrix;
-use crate::cells::{cell::Cell, vector::VectorU16};
+use crate::cells::{cell::Cell, vector::Vector};
 
 use super::ui_element::{Alignment, UiElement};
 
@@ -15,8 +15,7 @@ pub struct Text {
 impl Text {
     pub fn new(
         name: String,
-        x: i32,
-        y: i32,
+        position: Vector<i32>,
         alignment: Alignment,
         string: String,
         cell_matrix_width: u16,
@@ -28,21 +27,18 @@ impl Text {
         let height = size.1;
         let mut ui_element = UiElement::new(
             name,
-            x,
-            y,
+            position,
             alignment.clone(),
             width,
             height,
             cell_matrix_width,
             cell_matrix_height,
         );
-        let aligned_x = ui_element.aligned_x();
-        let aligned_y = ui_element.aligned_y();
+        let aligned_position = ui_element.aligned_position();
 
         update_cell_group(
             &mut ui_element.cell_group_mut(),
-            aligned_x,
-            aligned_y,
+            aligned_position,
             width,
             height,
             string.clone(),
@@ -77,15 +73,13 @@ impl Text {
     }
 
     fn update_cell_group_wrapper(&mut self) {
-        let aligned_x = self.ui_element.aligned_x();
-        let aligned_y = self.ui_element.aligned_y();
+        let aligned_position = self.ui_element.aligned_position();
         let width = self.ui_element.width();
         let height = self.ui_element.height();
 
         update_cell_group(
             &mut self.ui_element.cell_group_mut(),
-            aligned_x,
-            aligned_y,
+            aligned_position,
             width,
             height,
             self.string.clone(),
@@ -113,8 +107,7 @@ fn calculated_string_box_size(string: &str) -> (u16, u16) {
 
 fn update_cell_group(
     cell_group: &mut CellGroup,
-    aligned_x: u16,
-    aligned_y: u16,
+    aligned_position: Vector<u16>,
     width: u16,
     height: u16,
     string: String,
@@ -136,7 +129,10 @@ fn update_cell_group(
                 None => Cell::new_colorless(' '),
             };
 
-            cell_group.set_cell(VectorU16::new(x + aligned_x, y + aligned_y), cell);
+            cell_group.set_cell(
+                Vector::<u16>::new(x + aligned_position.x(), y + aligned_position.y()),
+                cell,
+            );
             string_index += 1;
         }
     }

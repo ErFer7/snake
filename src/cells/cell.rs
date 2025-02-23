@@ -3,7 +3,7 @@ use termion::{
     cursor::Goto,
 };
 
-use super::{color::Color, vector::VectorU16};
+use super::{color::Color, vector::Vector};
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum CellType {
@@ -57,7 +57,7 @@ impl Cell {
         return self.cell_type;
     }
 
-    pub fn to_string(&self, position: VectorU16) -> String {
+    pub fn to_string(&self, position: Vector<u16>) -> String {
         format!(
             "{}{}{}{}",
             Goto(position.x() + 1, position.y() + 1),

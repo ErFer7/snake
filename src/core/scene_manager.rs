@@ -1,30 +1,20 @@
 use std::collections::HashMap;
 
-use crate::{
-    events::Event, scenes::scene::{Scene, UpdateResult},
-};
+use crate::scenes::scene::Scene;
 
-pub struct GlobalContext {
+use super::{events::Event, gameplay_context::GameplayContext};
+
+pub struct SceneManager {
     scenes: HashMap<String, Box<dyn Scene>>,
     current_scene: Option<Box<dyn Scene>>,
-    gameplay_context: GameplayContext,
     exit: bool,
 }
 
-pub struct GameplayContext {
-    score: u32,
-    start_new_game: bool,
-}
-
-impl GlobalContext {
+impl SceneManager {
     pub fn new() -> Self {
         Self {
             scenes: HashMap::new(),
             current_scene: None,
-            gameplay_context: GameplayContext {
-                score: 0,
-                start_new_game: true,
-            },
             exit: false,
         }
     }
@@ -53,17 +43,15 @@ impl GlobalContext {
         return self.exit;
     }
 
-    pub fn gameplay_context(&self) -> GameplayContext {
-        self.gameplay_context.clone()
-    }
-
-    pub fn handle_update_result(&mut self, update_result: UpdateResult) {
-        self.gameplay_context = update_result.gameplay_context();
-
-        match update_result.event() {
+    pub fn handle_update_result(
+        &mut self,
+        event: Event,
+        gameplay_context: GameplayContext,
+    ) -> GameplayContext {
+        match event {
             Event::Start => {
-                self.gameplay_context.reset();
                 self.set_current_scene("gameplay");
+                return GameplayContext::new();
             }
             Event::Pause => {
                 self.set_current_scene("paused");
@@ -72,8 +60,8 @@ impl GlobalContext {
                 self.set_current_scene("gameplay");
             }
             Event::Restart => {
-                self.gameplay_context.reset();
                 self.set_current_scene("gameplay");
+                return GameplayContext::new();
             }
             Event::End => {
                 self.set_current_scene("game_over");
@@ -86,41 +74,7 @@ impl GlobalContext {
             }
             Event::None => {}
         }
-    }
-}
 
-impl GameplayContext {
-    pub fn reset(&mut self) {
-        self.score = 0;
-        self.start_new_game = true;
-    }
-
-    pub fn new_incremented(gameplay_context: GameplayContext) -> Self {
-        Self {
-            score: gameplay_context.score + 1,
-            start_new_game: gameplay_context.start_new_game,
-        }
-    }
-
-    pub fn new_game_started(gameplay_context: GameplayContext) -> Self {
-        Self {
-            score: gameplay_context.score,
-            start_new_game: false,
-        }
-    }
-
-    pub fn score(&self) -> u32 {
-        self.score
-    }
-
-    pub fn start_new_game(&self) -> bool {
-        self.start_new_game
-    }
-
-    pub(crate) fn clone(&self) -> GameplayContext {
-        GameplayContext {
-            score: self.score,
-            start_new_game: self.start_new_game,
-        }
+        return gameplay_context;
     }
 }

@@ -3,11 +3,11 @@ use std::collections::HashMap;
 use super::{
     cell::{Cell, CellType},
     cell_matrix::CellMatrix,
-    vector::VectorU16,
+    vector::Vector,
 };
 
 pub struct CellGroup {
-    cells: HashMap<VectorU16, Cell>,
+    cells: HashMap<Vector<u16>, Cell>,
 }
 
 impl CellGroup {
@@ -17,7 +17,7 @@ impl CellGroup {
         };
     }
 
-    pub fn set_cell(&mut self, position: VectorU16, cell: Cell) {
+    pub fn set_cell(&mut self, position: Vector<u16>, cell: Cell) {
         self.cells.insert(position, cell);
     }
 
