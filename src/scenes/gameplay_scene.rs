@@ -144,8 +144,6 @@ impl GameplayScene {
                             self.gameplay_area_origin.clone(),
                             self.gameplay_area_extension.clone(),
                         );
-
-                        return Event::None;
                     }
                     _ => (),
                 }

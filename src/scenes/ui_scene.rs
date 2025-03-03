@@ -43,9 +43,7 @@ impl Scene for UiScene {
     }
 
     fn update(&mut self, pressed_key: Option<Key>, _: f64, _: f64) -> Event {
-        let event = self.selector.update(pressed_key, &mut self.cell_matrix);
-
-        return event;
+        return self.selector.update(pressed_key, &mut self.cell_matrix);
     }
 
     fn render_texts(&mut self) {
