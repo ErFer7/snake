@@ -8,6 +8,8 @@ use termion::{
     AsyncReader,
 };
 
+use crate::{MINIMUM_HEIGHT, MINIMUM_WIDTH};
+
 pub struct Terminal {
     width: u16,
     height: u16,
@@ -20,6 +22,15 @@ impl Terminal {
         let terminal_size = termion::terminal_size().expect("Failed to get terminal size");
         let stdout = std::io::stdout().into_raw_mode().unwrap();
         let stdin = termion::async_stdin();
+        let width = terminal_size.0;
+        let height = terminal_size.1;
+
+        if width < MINIMUM_WIDTH || height < MINIMUM_HEIGHT {
+            panic!(
+                "The terminal size is too small! Minimum size is {}x{}",
+                MINIMUM_WIDTH, MINIMUM_HEIGHT
+            );
+        }
 
         return Terminal {
             width: terminal_size.0,

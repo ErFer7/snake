@@ -21,6 +21,10 @@ impl Chronometer {
         };
     }
 
+    pub fn real_frame_duration(&self) -> f64 {
+        return self.real_frame_duration.as_secs_f64();
+    }
+
     /// Returns false if the frame should be skipped.
     pub fn update(&mut self) -> bool {
         let now = Instant::now();
@@ -37,6 +41,6 @@ impl Chronometer {
     }
 
     pub fn current_fps(&self) -> f64 {
-        return 1.0 / self.real_frame_duration.as_secs_f64();
+        return 1.0 / self.real_frame_duration();
     }
 }

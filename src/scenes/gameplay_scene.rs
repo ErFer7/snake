@@ -1,8 +1,10 @@
-use std::collections::HashMap;
+use std::{any::Any, collections::HashMap};
+
+use termion::event::Key;
 
 use crate::{
     cells::{cell::CellType, cell_matrix::CellMatrix, color::Color, vector::Vector},
-    core::{events::Event, gameplay_context::GameplayContext, terminal::Terminal},
+    core::{events::Event, terminal::Terminal},
     gameplay::{fruit::Fruit, snake::Snake, wall::Wall},
     ui::{text::Text, ui_element::Alignment},
     SNAKE_SPEED,
@@ -19,6 +21,7 @@ pub struct GameplayScene {
     wall: Wall,
     snake: Snake,
     fruit: Fruit,
+    score: u32,
 }
 
 impl Scene for GameplayScene {
@@ -32,6 +35,7 @@ impl Scene for GameplayScene {
             wall: Wall::new(width, height - 1),
             snake: Snake::none(),
             fruit: Fruit::none(),
+            score: 0,
         }
     }
 
@@ -39,31 +43,26 @@ impl Scene for GameplayScene {
         self.texts.insert(text.name(), text);
     }
 
-    fn update(
-        &mut self,
-        terminal: &mut Terminal,
-        gameplay_context: GameplayContext,
-        current_fps: f64,
-    ) -> (Event, GameplayContext) {
-        if gameplay_context.start_new_game() {
-            return self.start_new_game(gameplay_context);
+    fn set_text(&mut self, text_name: &str, new_text: String) {
+        if let Some(text) = self.texts.get_mut(text_name) {
+            text.set_string(new_text);
         }
+    }
 
+    fn update(&mut self, pressed_key: Option<Key>, current_fps: f64, frame_duration: f64) -> Event {
         self.update_fps_text(current_fps);
         self.snake.render(&mut self.cell_matrix);
         self.fruit.render(&mut self.cell_matrix);
 
-        let pressed_key = terminal.get_pressed_key();
-
         if pressed_key == Some(termion::event::Key::Esc) {
-            return (Event::Pause, gameplay_context);
+            return Event::Pause;
         }
 
         self.snake.update(pressed_key);
 
-        let head = self.snake.move_forward();
+        let head = self.snake.move_forward(frame_duration);
 
-        return self.handle_head_update(head, gameplay_context);
+        return self.handle_snake_update(head);
     }
 
     fn write(&mut self, terminal: &mut Terminal) {
@@ -85,10 +84,18 @@ impl Scene for GameplayScene {
         self.wall.render(&mut self.cell_matrix);
         self.render_texts();
     }
+
+    fn as_any_mut(&mut self) -> &mut dyn Any {
+        return self;
+    }
 }
 
 impl GameplayScene {
-    fn start_new_game(&mut self, gameplay_context: GameplayContext) -> (Event, GameplayContext) {
+    pub fn score(&self) -> u32 {
+        return self.score;
+    }
+
+    pub fn start_new_game(&mut self) {
         self.snake = Snake::new(
             Vector::<u16>::new(self.cell_matrix.width() / 2, self.cell_matrix.height() / 2),
             SNAKE_SPEED,
@@ -100,10 +107,8 @@ impl GameplayScene {
             self.gameplay_area_extension.clone(),
         );
 
-        return (
-            Event::None,
-            GameplayContext::new_game_started(gameplay_context),
-        );
+        self.score = 0;
+        self.update_score_text(self.score);
     }
 
     fn update_fps_text(&mut self, current_fps: f64) {
@@ -114,28 +119,25 @@ impl GameplayScene {
         self.render_texts();
     }
 
-    fn update_score_text(&mut self, score: u32) {
+    fn update_score_text(&mut self, new_score: u32) {
         self.texts
             .get_mut("score")
             .unwrap()
-            .set_string(format!("{:010}", score + 1));
+            .set_string(format!("{:010}", new_score));
         self.render_texts();
     }
 
-    fn handle_head_update(
-        &mut self,
-        head: Option<Vector<u16>>,
-        gameplay_context: GameplayContext,
-    ) -> (Event, GameplayContext) {
+    fn handle_snake_update(&mut self, head: Option<Vector<u16>>) -> Event {
         if head.is_some() {
             if let Some(cell) = self.cell_matrix.get_cell(head.unwrap()) {
                 match cell.cell_type() {
                     CellType::Solid | CellType::Snake => {
-                        return (Event::End, gameplay_context);
+                        return Event::End;
                     }
                     CellType::Fruit => {
                         self.snake.grow();
-                        self.update_score_text(gameplay_context.score() + 1);
+                        self.score += 1;
+                        self.update_score_text(self.score);
 
                         self.fruit = Fruit::new(
                             &self.cell_matrix,
@@ -143,17 +145,14 @@ impl GameplayScene {
                             self.gameplay_area_extension.clone(),
                         );
 
-                        return (
-                            Event::None,
-                            GameplayContext::new_incremented(gameplay_context),
-                        );
+                        return Event::None;
                     }
                     _ => (),
                 }
             }
         }
 
-        return (Event::None, gameplay_context);
+        return Event::None;
     }
 }
 

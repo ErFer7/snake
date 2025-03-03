@@ -8,7 +8,7 @@ use crate::{
         color::Color,
         vector::Vector,
     },
-    FPS, INITIAL_SNAKE_LENGTH,
+    INITIAL_SNAKE_LENGTH,
 };
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -54,10 +54,10 @@ impl Snake {
         }
     }
 
-    pub fn move_forward(&mut self) -> Option<Vector<u16>> {
-        self.movement_accumulator += self.speed / FPS as f32;
+    pub fn move_forward(&mut self, frame_duration: f64) -> Option<Vector<u16>> {
+        self.movement_accumulator += frame_duration as f32;
 
-        if self.movement_accumulator >= 1.0 {
+        if self.movement_accumulator * self.speed >= 1.0 {
             self.movement_accumulator = 0.0;
 
             let new_head = self.new_head();

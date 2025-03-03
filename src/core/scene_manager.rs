@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 
-use crate::scenes::scene::Scene;
+use crate::scenes::{gameplay_scene::GameplayScene, scene::Scene};
 
-use super::{events::Event, gameplay_context::GameplayContext};
+use super::events::Event;
 
 pub struct SceneManager {
     scenes: HashMap<String, Box<dyn Scene>>,
@@ -43,15 +43,11 @@ impl SceneManager {
         return self.exit;
     }
 
-    pub fn handle_update_result(
-        &mut self,
-        event: Event,
-        gameplay_context: GameplayContext,
-    ) -> GameplayContext {
+    pub fn handle_update_result(&mut self, event: Event) {
         match event {
             Event::Start => {
+                self.start_new_game();
                 self.set_current_scene("gameplay");
-                return GameplayContext::new();
             }
             Event::Pause => {
                 self.set_current_scene("paused");
@@ -60,10 +56,11 @@ impl SceneManager {
                 self.set_current_scene("gameplay");
             }
             Event::Restart => {
+                self.start_new_game();
                 self.set_current_scene("gameplay");
-                return GameplayContext::new();
             }
             Event::End => {
+                self.update_game_over_scene();
                 self.set_current_scene("game_over");
             }
             Event::GoToMenu => {
@@ -74,7 +71,38 @@ impl SceneManager {
             }
             Event::None => {}
         }
+    }
 
-        return gameplay_context;
+    fn start_new_game(&mut self) {
+        self.scenes
+            .get_mut("gameplay")
+            .unwrap()
+            .as_any_mut()
+            .downcast_mut::<GameplayScene>()
+            .unwrap()
+            .start_new_game();
+    }
+
+    fn update_game_over_scene(&mut self) {
+        let score = if let Some(scene) = self.scenes.get_mut("gameplay") {
+            scene
+                .as_any_mut()
+                .downcast_mut::<GameplayScene>()
+                .unwrap()
+                .score()
+        } else if let Some(scene) = self.current_scene.as_mut() {
+            scene
+                .as_any_mut()
+                .downcast_mut::<GameplayScene>()
+                .unwrap()
+                .score()
+        } else {
+            0
+        };
+
+        self.scenes
+            .get_mut("game_over")
+            .unwrap()
+            .set_text("score", format!("{:010}", score));
     }
 }

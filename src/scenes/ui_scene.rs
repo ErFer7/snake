@@ -1,8 +1,10 @@
-use std::collections::HashMap;
+use std::{any::Any, collections::HashMap};
+
+use termion::event::Key;
 
 use crate::{
     cells::{cell_matrix::CellMatrix, color::Color, vector::Vector},
-    core::{events::Event, gameplay_context::GameplayContext, terminal::Terminal},
+    core::{events::Event, terminal::Terminal},
     ui::{button::Button, selector::Selector, text::Text, ui_element::Alignment},
     VERSION,
 };
@@ -34,16 +36,16 @@ impl Scene for UiScene {
         self.texts.insert(text.name(), text);
     }
 
-    fn update(
-        &mut self,
-        terminal: &mut Terminal,
-        gameplay_context: GameplayContext,
-        _: f64,
-    ) -> (Event, GameplayContext) {
-        let pressed_key = terminal.get_pressed_key();
+    fn set_text(&mut self, text_name: &str, new_text: String) {
+        if let Some(text) = self.texts.get_mut(text_name) {
+            text.set_string(new_text);
+        }
+    }
+
+    fn update(&mut self, pressed_key: Option<Key>, _: f64, _: f64) -> Event {
         let event = self.selector.update(pressed_key, &mut self.cell_matrix);
 
-        return (event, gameplay_context);
+        return event;
     }
 
     fn render_texts(&mut self) {
@@ -60,6 +62,10 @@ impl Scene for UiScene {
 
     fn write(&mut self, terminal: &mut Terminal) {
         self.cell_matrix.write(terminal);
+    }
+
+    fn as_any_mut(&mut self) -> &mut dyn Any {
+        return self;
     }
 }
 
@@ -355,9 +361,31 @@ pub fn build_game_over_scene(width: u16, height: u16) -> UiScene {
         Event::GoToMenu,
     );
 
+    let score_label = Text::new(
+        "score_label".to_string(),
+        Vector::<i32>::new(0, 5),
+        Alignment::Center,
+        "Score".to_string(),
+        width,
+        height,
+        Color::White.to_rgb(),
+    );
+
+    let score = Text::new(
+        "score".to_string(),
+        Vector::<i32>::new(0, 6),
+        Alignment::Center,
+        "0000000000".to_string(),
+        width,
+        height,
+        Color::White.to_rgb(),
+    );
+
     ui_scene.add_text(top_divider);
     ui_scene.add_text(bottom_divider);
     ui_scene.add_text(title);
+    ui_scene.add_text(score_label);
+    ui_scene.add_text(score);
 
     let selector = ui_scene.selector_mut();
 
