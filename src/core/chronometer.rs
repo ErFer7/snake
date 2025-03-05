@@ -1,5 +1,5 @@
 use std::{
-    thread,
+    thread::sleep,
     time::{Duration, Instant},
 };
 
@@ -36,7 +36,7 @@ impl Chronometer {
             return true;
         }
 
-        thread::sleep(Duration::from_millis(1));
+        sleep(Duration::from_millis(1));
         return false;
     }
 

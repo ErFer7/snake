@@ -13,7 +13,7 @@ pub trait Scene {
         Self: Sized;
     fn name(&self) -> String;
     fn add_text(&mut self, text: Text);
-    fn set_text(&mut self, text_name: &str, new_text: String);
+    fn set_text_string(&mut self, text_name: &str, new_text: String);
     fn update(&mut self, pressed_key: Option<Key>, current_fps: f64, frame_duration: f64) -> Event;
     fn render_texts(&mut self);
     fn render(&mut self);

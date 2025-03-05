@@ -3,7 +3,7 @@ use termion::event::Key;
 use crate::{
     cells::{
         cell::{Cell, CellType},
-        cell_group::{self, CellGroup},
+        cell_group::CellGroup,
         cell_matrix::CellMatrix,
         color::Color,
         vector::Vector,
@@ -28,30 +28,30 @@ pub struct Snake {
 }
 
 impl Snake {
-    pub fn new(position: Vector<u16>, speed: f32) -> Snake {
+    pub fn new(position: &Vector<u16>, speed: f32) -> Snake {
         let mut body = Vec::new();
 
         for i in 0..INITIAL_SNAKE_LENGTH {
             body.push(Vector::<u16>::new(position.x(), position.y() + i));
         }
 
-        Snake {
+        return Snake {
             body,
             direction: Direction::Up,
             speed,
             movement_accumulator: 0.0,
-            cell_group: cell_group::CellGroup::new(),
-        }
+            cell_group: CellGroup::new(),
+        };
     }
 
     pub fn none() -> Snake {
-        Snake {
+        return Snake {
             body: Vec::new(),
             direction: Direction::Up,
             speed: 0.0,
             movement_accumulator: 0.0,
-            cell_group: cell_group::CellGroup::new(),
-        }
+            cell_group: CellGroup::new(),
+        };
     }
 
     pub fn move_forward(&mut self, frame_duration: f64) -> Option<Vector<u16>> {
@@ -80,22 +80,22 @@ impl Snake {
 
     pub fn update(&mut self, pressed_key: Option<Key>) {
         match pressed_key {
-            Some(termion::event::Key::Up) => {
+            Some(Key::Up) => {
                 if self.direction != Direction::Down {
                     self.change_direction(Direction::Up);
                 }
             }
-            Some(termion::event::Key::Down) => {
+            Some(Key::Down) => {
                 if self.direction != Direction::Up {
                     self.change_direction(Direction::Down);
                 }
             }
-            Some(termion::event::Key::Left) => {
+            Some(Key::Left) => {
                 if self.direction != Direction::Right {
                     self.change_direction(Direction::Left);
                 }
             }
-            Some(termion::event::Key::Right) => {
+            Some(Key::Right) => {
                 if self.direction != Direction::Left {
                     self.change_direction(Direction::Right);
                 }
@@ -109,14 +109,18 @@ impl Snake {
     }
 
     pub fn render(&mut self, cell_matrix: &mut CellMatrix) {
-        for i in 0..self.body.len() {
-            let char = match i % 4 {
-                0 => '█',
-                1 => '▓',
-                2 => '▒',
-                3 => '░',
-                _ => '?',
-            };
+        const PATTERNS: [[char; 4]; 2] = [['█', '▓', '▒', '░'], ['░', '▒', '▓', '█']];
+
+        let mut reverse_pattern = false;
+        let body_len = self.body.len();
+
+        for i in 0..body_len {
+            if i % 4 == 0 && i > 0 {
+                reverse_pattern = !reverse_pattern;
+            }
+
+            let pattern_idx = reverse_pattern as usize;
+            let char = PATTERNS[pattern_idx][i % 4];
 
             self.set_cell(self.body[i].clone(), char);
         }
@@ -138,7 +142,12 @@ impl Snake {
     fn set_cell(&mut self, position: Vector<u16>, char: char) {
         self.cell_group.set_cell(
             position,
-            Cell::new(char, Color::Green.to_rgb(), CellType::Snake),
+            Cell::new(
+                char,
+                Color::Black.to_rgb(),
+                Color::Green.to_rgb(),
+                CellType::Snake,
+            ),
         );
     }
 }

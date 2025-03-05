@@ -5,7 +5,7 @@ use termion::event::Key;
 use crate::{
     cells::{cell_matrix::CellMatrix, color::Color, vector::Vector},
     core::{events::Event, terminal::Terminal},
-    ui::{button::Button, selector::Selector, text::Text, ui_element::Alignment},
+    ui::{button::Button, selector::Selector, text::Text, ui_element::Orientation},
     VERSION,
 };
 
@@ -20,12 +20,12 @@ pub struct UiScene {
 
 impl Scene for UiScene {
     fn new(name: String, width: u16, height: u16) -> Self {
-        UiScene {
+        return UiScene {
             name,
             cell_matrix: CellMatrix::new(width, height),
             texts: HashMap::new(),
             selector: Selector::new(),
-        }
+        };
     }
 
     fn name(&self) -> String {
@@ -36,10 +36,8 @@ impl Scene for UiScene {
         self.texts.insert(text.name(), text);
     }
 
-    fn set_text(&mut self, text_name: &str, new_text: String) {
-        if let Some(text) = self.texts.get_mut(text_name) {
-            text.set_string(new_text);
-        }
+    fn set_text_string(&mut self, text_name: &str, new_text: String) {
+        self.texts.get_mut(text_name).unwrap().set_string(new_text);
     }
 
     fn update(&mut self, pressed_key: Option<Key>, _: f64, _: f64) -> Event {
@@ -69,7 +67,7 @@ impl Scene for UiScene {
 
 impl UiScene {
     pub fn selector_mut(&mut self) -> &mut Selector {
-        &mut self.selector
+        return &mut self.selector;
     }
 }
 
@@ -78,28 +76,33 @@ pub fn build_main_menu_scene(width: u16, height: u16) -> UiScene {
 
     let top_divider = Text::new(
         "top_divider".to_string(),
-        Vector::<i32>::new(0, 0),
-        Alignment::Top,
+        Vector::<i32>::zero(),
+        Orientation::Top,
+        Orientation::Center,
         "━".repeat(width as usize),
         width,
         height,
+        Color::Black.to_rgb(),
         Color::LightGreen.to_rgb(),
     );
 
     let bottom_divider = Text::new(
         "bottom_divider".to_string(),
-        Vector::<i32>::new(0, 0),
-        Alignment::Bottom,
+        Vector::<i32>::zero(),
+        Orientation::Bottom,
+        Orientation::Center,
         "━".repeat(width as usize),
         width,
         height,
+        Color::Black.to_rgb(),
         Color::LightGreen.to_rgb(),
     );
 
-    let back_image = Text::new(
-        "back_image".to_string(),
+    let back_ascii = Text::new(
+        "back_ascii".to_string(),
         Vector::<i32>::new(0, 10),
-        Alignment::Center,
+        Orientation::Center,
+        Orientation::Center,
         [
             "⠀⠀⠀⠀⠀⠀⠀⢀⣠⣤⣶⣶⣿⣿⣿⣿⣿⣷⣶⣦⣄⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⣤⣶⣶⡿⠿⢿⣿⣶⣶⣤⣄⡀⠀⠀⠀⠀⠀⠀⠀",
             "⠀⠀⠀⠀⠀⣠⣶⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⣄⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠠⠞⠋⠉⠀⠀⠀⠀⠀⠀⠀⠉⠛⢿⣿⣷⣄⠀⠀⠀⠀⠀",
@@ -120,13 +123,15 @@ pub fn build_main_menu_scene(width: u16, height: u16) -> UiScene {
         .join("\n"),
         width,
         height,
+        Color::Black.to_rgb(),
         Color::LightGreen.to_rgb(),
     );
 
     let title = Text::new(
         "title".to_string(),
         Vector::<i32>::new(0, 5),
-        Alignment::Top,
+        Orientation::Top,
+        Orientation::Center,
         [
             "███████╗███╗   ██╗ █████╗ ██╗  ██╗███████╗",
             "██╔════╝████╗  ██║██╔══██╗██║ ██╔╝██╔════╝",
@@ -138,56 +143,67 @@ pub fn build_main_menu_scene(width: u16, height: u16) -> UiScene {
         .join("\n"),
         width,
         height,
+        Color::Black.to_rgb(),
         Color::LightGreen.to_rgb(),
     );
 
     let start = Button::new(
         "start".to_string(),
-        Vector::<i32>::new(0, -5),
-        Alignment::Center,
+        Vector::<i32>::new(-3, -5),
+        Orientation::Center,
+        Orientation::CenterLeft,
         "START".to_string(),
         width,
         height,
-        Color::White.to_rgb(),
+        Color::Black.to_rgb(),
         Color::LightGreen.to_rgb(),
+        Color::LightGreen.to_rgb(),
+        Color::Black.to_rgb(),
         Event::Start,
     );
 
     let exit = Button::new(
         "exit".to_string(),
-        Vector::<i32>::new(0, -3),
-        Alignment::Center,
+        Vector::<i32>::new(-3, -3),
+        Orientation::Center,
+        Orientation::CenterLeft,
         "EXIT".to_string(),
         width,
         height,
-        Color::White.to_rgb(),
+        Color::Black.to_rgb(),
         Color::LightGreen.to_rgb(),
+        Color::LightGreen.to_rgb(),
+        Color::Black.to_rgb(),
         Event::Exit,
     );
 
     let version = Text::new(
         "version".to_string(),
         Vector::<i32>::new(0, -3),
-        Alignment::Bottom,
+        Orientation::Bottom,
+        Orientation::Center,
         VERSION.to_string(),
         width,
         height,
+        Color::Black.to_rgb(),
         Color::LightCyan.to_rgb(),
     );
 
     let info = Text::new(
         "info".to_string(),
         Vector::<i32>::new(0, -2),
-        Alignment::Bottom,
+        Orientation::Bottom,
+        Orientation::Center,
         "Written in Rust by ErFer7".to_string(),
         width,
         height,
+        Color::Black.to_rgb(),
         Color::White.to_rgb(),
     );
 
     ui_scene.add_text(top_divider);
     ui_scene.add_text(bottom_divider);
-    ui_scene.add_text(back_image);
+    ui_scene.add_text(back_ascii);
     ui_scene.add_text(title);
     ui_scene.add_text(version);
     ui_scene.add_text(info);
@@ -208,27 +224,32 @@ pub fn build_paused_scene(width: u16, height: u16) -> UiScene {
     let top_divider = Text::new(
         "top_divider".to_string(),
         Vector::<i32>::new(0, 0),
-        Alignment::Top,
+        Orientation::Top,
+        Orientation::Center,
         "━".repeat(width as usize),
         width,
         height,
+        Color::Black.to_rgb(),
         Color::White.to_rgb(),
     );
 
     let bottom_divider = Text::new(
         "bottom_divider".to_string(),
         Vector::<i32>::new(0, 0),
-        Alignment::Bottom,
+        Orientation::Bottom,
+        Orientation::Center,
         "━".repeat(width as usize),
         width,
         height,
+        Color::Black.to_rgb(),
         Color::White.to_rgb(),
     );
 
     let title = Text::new(
         "title".to_string(),
         Vector::<i32>::new(0, 5),
-        Alignment::Top,
+        Orientation::Top,
+        Orientation::Center,
         [
             "██████╗  █████╗ ██╗   ██╗███████╗███████╗██████╗ ",
             "██╔══██╗██╔══██╗██║   ██║██╔════╝██╔════╝██╔══██╗",
@@ -240,42 +261,52 @@ pub fn build_paused_scene(width: u16, height: u16) -> UiScene {
         .join("\n"),
         width,
         height,
+        Color::Black.to_rgb(),
         Color::White.to_rgb(),
     );
 
     let resume = Button::new(
         "resume".to_string(),
-        Vector::<i32>::new(0, -5),
-        Alignment::Center,
+        Vector::<i32>::new(-4, -5),
+        Orientation::Center,
+        Orientation::CenterLeft,
         "RESUME".to_string(),
         width,
         height,
+        Color::Black.to_rgb(),
         Color::White.to_rgb(),
-        Color::LightGreen.to_rgb(),
+        Color::White.to_rgb(),
+        Color::Black.to_rgb(),
         Event::Resume,
     );
 
     let restart = Button::new(
         "restart".to_string(),
-        Vector::<i32>::new(0, -3),
-        Alignment::Center,
+        Vector::<i32>::new(-4, -3),
+        Orientation::Center,
+        Orientation::CenterLeft,
         "RESTART".to_string(),
         width,
         height,
+        Color::Black.to_rgb(),
         Color::White.to_rgb(),
-        Color::LightGreen.to_rgb(),
+        Color::White.to_rgb(),
+        Color::Black.to_rgb(),
         Event::Restart,
     );
 
     let exit = Button::new(
         "exit".to_string(),
-        Vector::<i32>::new(0, -1),
-        Alignment::Center,
+        Vector::<i32>::new(-4, -1),
+        Orientation::Center,
+        Orientation::CenterLeft,
         "END".to_string(),
         width,
         height,
+        Color::Black.to_rgb(),
         Color::White.to_rgb(),
-        Color::LightGreen.to_rgb(),
+        Color::White.to_rgb(),
+        Color::Black.to_rgb(),
         Event::End,
     );
 
@@ -300,27 +331,32 @@ pub fn build_game_over_scene(width: u16, height: u16) -> UiScene {
     let top_divider = Text::new(
         "top_divider".to_string(),
         Vector::<i32>::new(0, 0),
-        Alignment::Top,
+        Orientation::Top,
+        Orientation::Center,
         "━".repeat(width as usize),
         width,
         height,
+        Color::Black.to_rgb(),
         Color::LightRed.to_rgb(),
     );
 
     let bottom_divider = Text::new(
         "bottom_divider".to_string(),
         Vector::<i32>::new(0, 0),
-        Alignment::Bottom,
+        Orientation::Bottom,
+        Orientation::Center,
         "━".repeat(width as usize),
         width,
         height,
+        Color::Black.to_rgb(),
         Color::LightRed.to_rgb(),
     );
 
     let title = Text::new(
         "title".to_string(),
         Vector::<i32>::new(0, 5),
-        Alignment::Top,
+        Orientation::Top,
+        Orientation::Center,
         [
             " ██████╗  █████╗ ███╗   ███╗███████╗     ██████╗ ██╗   ██╗███████╗██████╗ ",
             "██╔════╝ ██╔══██╗████╗ ████║██╔════╝    ██╔═══██╗██║   ██║██╔════╝██╔══██╗",
@@ -332,51 +368,62 @@ pub fn build_game_over_scene(width: u16, height: u16) -> UiScene {
         .join("\n"),
         width,
         height,
+        Color::Black.to_rgb(),
         Color::LightRed.to_rgb(),
     );
 
     let restart = Button::new(
         "restart".to_string(),
-        Vector::<i32>::new(0, -3),
-        Alignment::Center,
+        Vector::<i32>::new(-4, -3),
+        Orientation::Center,
+        Orientation::CenterLeft,
         "RESTART".to_string(),
         width,
         height,
-        Color::White.to_rgb(),
+        Color::Black.to_rgb(),
         Color::LightRed.to_rgb(),
+        Color::LightRed.to_rgb(),
+        Color::Black.to_rgb(),
         Event::Restart,
     );
 
     let menu = Button::new(
         "menu".to_string(),
-        Vector::<i32>::new(0, -1),
-        Alignment::Center,
+        Vector::<i32>::new(-4, -1),
+        Orientation::Center,
+        Orientation::CenterLeft,
         "MENU".to_string(),
         width,
         height,
-        Color::White.to_rgb(),
+        Color::Black.to_rgb(),
         Color::LightRed.to_rgb(),
+        Color::LightRed.to_rgb(),
+        Color::Black.to_rgb(),
         Event::GoToMenu,
     );
 
     let score_label = Text::new(
         "score_label".to_string(),
-        Vector::<i32>::new(0, 5),
-        Alignment::Center,
-        "Score".to_string(),
+        Vector::<i32>::new(-8, 5),
+        Orientation::Center,
+        Orientation::CenterLeft,
+        "Score:".to_string(),
         width,
         height,
-        Color::White.to_rgb(),
+        Color::Black.to_rgb(),
+        Color::LightRed.to_rgb(),
     );
 
     let score = Text::new(
         "score".to_string(),
-        Vector::<i32>::new(0, 6),
-        Alignment::Center,
+        Vector::<i32>::new(-1, 5),
+        Orientation::Center,
+        Orientation::CenterLeft,
         "0000000000".to_string(),
         width,
         height,
-        Color::White.to_rgb(),
+        Color::Black.to_rgb(),
+        Color::LightRed.to_rgb(),
     );
 
     ui_scene.add_text(top_divider);

@@ -1,11 +1,11 @@
-use std::io::{Read, Write};
+use std::io::{self, stdout, Read, Write};
 
 use termion::{
-    cursor,
+    async_stdin, cursor,
     event::Key,
     input::TermRead,
     raw::{IntoRawMode, RawTerminal},
-    AsyncReader,
+    terminal_size, AsyncReader,
 };
 
 use crate::{MINIMUM_HEIGHT, MINIMUM_WIDTH};
@@ -14,14 +14,14 @@ pub struct Terminal {
     width: u16,
     height: u16,
     stdin: AsyncReader,
-    stdout: RawTerminal<std::io::Stdout>,
+    stdout: RawTerminal<io::Stdout>,
 }
 
 impl Terminal {
     pub fn new() -> Terminal {
-        let terminal_size = termion::terminal_size().expect("Failed to get terminal size");
-        let stdout = std::io::stdout().into_raw_mode().unwrap();
-        let stdin = termion::async_stdin();
+        let terminal_size = terminal_size().expect("Failed to get terminal size");
+        let stdout = stdout().into_raw_mode().unwrap();
+        let stdin = async_stdin();
         let width = terminal_size.0;
         let height = terminal_size.1;
 

@@ -4,10 +4,7 @@ mod gameplay;
 mod scenes;
 mod ui;
 
-use core::{
-    chronometer::Chronometer, scene_manager::SceneManager,
-    terminal::Terminal,
-};
+use core::{chronometer::Chronometer, scene_manager::SceneManager, terminal::Terminal};
 
 use scenes::{
     gameplay_scene::build_gameplay_scene,

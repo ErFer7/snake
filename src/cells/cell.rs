@@ -1,5 +1,5 @@
 use termion::{
-    color::{Fg, Reset, Rgb},
+    color::{Bg, Fg, Reset, Rgb},
     cursor::Goto,
 };
 
@@ -16,23 +16,26 @@ pub enum CellType {
 #[derive(Clone)]
 pub struct Cell {
     char: char,
-    color: Rgb,
+    bg_color: Rgb,
+    fg_color: Rgb,
     cell_type: CellType,
 }
 
 impl Cell {
-    pub fn new(char: char, color: Rgb, cell_type: CellType) -> Cell {
+    pub fn new(char: char, bg_color: Rgb, fg_color: Rgb, cell_type: CellType) -> Cell {
         return Cell {
             char,
-            color,
+            bg_color,
+            fg_color,
             cell_type,
         };
     }
 
-    pub fn new_typeless(char: char, color: Rgb) -> Cell {
+    pub fn new_typeless(char: char, bg_color: Rgb, fg_color: Rgb) -> Cell {
         return Cell {
             char,
-            color,
+            bg_color,
+            fg_color,
             cell_type: CellType::Solid,
         };
     }
@@ -40,30 +43,33 @@ impl Cell {
     pub fn new_colorless(char: char) -> Cell {
         return Cell {
             char,
-            color: Color::White.to_rgb(),
+            bg_color: Color::Black.to_rgb(),
+            fg_color: Color::White.to_rgb(),
             cell_type: CellType::Solid,
         };
     }
 
     pub fn new_empty() -> Cell {
-        Cell {
+        return Cell {
             char: ' ',
-            color: Color::White.to_rgb(),
+            bg_color: Color::Black.to_rgb(),
+            fg_color: Color::White.to_rgb(),
             cell_type: CellType::Empty,
-        }
+        };
     }
 
     pub fn cell_type(&self) -> CellType {
         return self.cell_type;
     }
 
-    pub fn to_string(&self, position: Vector<u16>) -> String {
-        format!(
-            "{}{}{}{}",
+    pub fn to_string(&self, position: &Vector<u16>) -> String {
+        return format!(
+            "{}{}{}{}{}",
             Goto(position.x() + 1, position.y() + 1),
-            Fg(self.color),
+            Bg(self.bg_color),
+            Fg(self.fg_color),
             self.char,
-            Fg(Reset)
-        )
+            Fg(Reset),
+        );
     }
 }

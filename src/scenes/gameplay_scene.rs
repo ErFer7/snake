@@ -6,7 +6,7 @@ use crate::{
     cells::{cell::CellType, cell_matrix::CellMatrix, color::Color, vector::Vector},
     core::{events::Event, terminal::Terminal},
     gameplay::{fruit::Fruit, snake::Snake, wall::Wall},
-    ui::{text::Text, ui_element::Alignment},
+    ui::{text::Text, ui_element::Orientation},
     SNAKE_SPEED,
 };
 
@@ -26,7 +26,7 @@ pub struct GameplayScene {
 
 impl Scene for GameplayScene {
     fn new(name: String, width: u16, height: u16) -> Self {
-        GameplayScene {
+        return GameplayScene {
             name,
             cell_matrix: CellMatrix::new(width, height),
             texts: HashMap::new(),
@@ -36,17 +36,22 @@ impl Scene for GameplayScene {
             snake: Snake::none(),
             fruit: Fruit::none(),
             score: 0,
-        }
+        };
+    }
+
+    fn name(&self) -> String {
+        return self.name.clone();
     }
 
     fn add_text(&mut self, text: Text) {
         self.texts.insert(text.name(), text);
     }
 
-    fn set_text(&mut self, text_name: &str, new_text: String) {
-        if let Some(text) = self.texts.get_mut(text_name) {
-            text.set_string(new_text);
-        }
+    fn set_text_string(&mut self, text_name: &str, new_text_string: String) {
+        self.texts
+            .get_mut(text_name)
+            .unwrap()
+            .set_string(new_text_string);
     }
 
     fn update(&mut self, pressed_key: Option<Key>, current_fps: f64, frame_duration: f64) -> Event {
@@ -54,7 +59,7 @@ impl Scene for GameplayScene {
         self.snake.render(&mut self.cell_matrix);
         self.fruit.render(&mut self.cell_matrix);
 
-        if pressed_key == Some(termion::event::Key::Esc) {
+        if pressed_key == Some(Key::Esc) {
             return Event::Pause;
         }
 
@@ -67,10 +72,6 @@ impl Scene for GameplayScene {
 
     fn write(&mut self, terminal: &mut Terminal) {
         self.cell_matrix.write(terminal);
-    }
-
-    fn name(&self) -> String {
-        return self.name.clone();
     }
 
     fn render_texts(&mut self) {
@@ -97,14 +98,14 @@ impl GameplayScene {
 
     pub fn start_new_game(&mut self) {
         self.snake = Snake::new(
-            Vector::<u16>::new(self.cell_matrix.width() / 2, self.cell_matrix.height() / 2),
+            &Vector::<u16>::new(self.cell_matrix.width() / 2, self.cell_matrix.height() / 2),
             SNAKE_SPEED,
         );
 
         self.fruit = Fruit::new(
             &self.cell_matrix,
-            self.gameplay_area_origin.clone(),
-            self.gameplay_area_extension.clone(),
+            &self.gameplay_area_origin,
+            &self.gameplay_area_extension,
         );
 
         self.score = 0;
@@ -129,24 +130,27 @@ impl GameplayScene {
 
     fn handle_snake_update(&mut self, head: Option<Vector<u16>>) -> Event {
         if head.is_some() {
-            if let Some(cell) = self.cell_matrix.get_cell(head.unwrap()) {
-                match cell.cell_type() {
-                    CellType::Solid | CellType::Snake => {
-                        return Event::End;
-                    }
-                    CellType::Fruit => {
-                        self.snake.grow();
-                        self.score += 1;
-                        self.update_score_text(self.score);
-
-                        self.fruit = Fruit::new(
-                            &self.cell_matrix,
-                            self.gameplay_area_origin.clone(),
-                            self.gameplay_area_extension.clone(),
-                        );
-                    }
-                    _ => (),
+            match self
+                .cell_matrix
+                .get_cell(&head.unwrap())
+                .unwrap()
+                .cell_type()
+            {
+                CellType::Solid | CellType::Snake => {
+                    return Event::End;
                 }
+                CellType::Fruit => {
+                    self.snake.grow();
+                    self.score += 1;
+                    self.update_score_text(self.score);
+
+                    self.fruit = Fruit::new(
+                        &self.cell_matrix,
+                        &self.gameplay_area_origin,
+                        &self.gameplay_area_extension,
+                    );
+                }
+                _ => (),
             }
         }
 
@@ -160,40 +164,48 @@ pub fn build_gameplay_scene(width: u16, height: u16) -> GameplayScene {
     let score_label = Text::new(
         "score_label".to_string(),
         Vector::<i32>::zero(),
-        Alignment::BottomLeft,
+        Orientation::BottomLeft,
+        Orientation::CenterLeft,
         "Score: ".to_string(),
         width,
         height,
+        Color::Black.to_rgb(),
         Color::White.to_rgb(),
     );
 
     let score = Text::new(
         "score".to_string(),
         Vector::<i32>::new(7, 0),
-        Alignment::BottomLeft,
+        Orientation::BottomLeft,
+        Orientation::CenterLeft,
         "0000000000".to_string(),
         width,
         height,
+        Color::Black.to_rgb(),
         Color::White.to_rgb(),
     );
 
     let fps_label = Text::new(
         "fps_label".to_string(),
         Vector::<i32>::new(18, 0),
-        Alignment::BottomLeft,
+        Orientation::BottomLeft,
+        Orientation::CenterLeft,
         "FPS: ".to_string(),
         width,
         height,
+        Color::Black.to_rgb(),
         Color::White.to_rgb(),
     );
 
     let fps = Text::new(
         "fps".to_string(),
         Vector::<i32>::new(23, 0),
-        Alignment::BottomLeft,
+        Orientation::BottomLeft,
+        Orientation::CenterLeft,
         "000.00".to_string(),
         width,
         height,
+        Color::Black.to_rgb(),
         Color::White.to_rgb(),
     );
 

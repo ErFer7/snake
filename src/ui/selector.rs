@@ -11,10 +11,10 @@ pub struct Selector {
 
 impl Selector {
     pub fn new() -> Selector {
-        Selector {
+        return Selector {
             buttons: Vec::new(),
             selected_index: 0,
-        }
+        };
     }
 
     pub fn add_button(&mut self, button: Button) {

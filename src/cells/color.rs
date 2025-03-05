@@ -1,4 +1,4 @@
-use termion::color;
+use termion::color::Rgb;
 
 #[allow(dead_code)]
 pub enum Color {
@@ -21,24 +21,24 @@ pub enum Color {
 }
 
 impl Color {
-    pub fn to_rgb(&self) -> color::Rgb {
-        match self {
-            Color::Black => color::Rgb(0, 0, 0),
-            Color::Red => color::Rgb(255, 0, 0),
-            Color::Green => color::Rgb(0, 255, 0),
-            Color::Yellow => color::Rgb(255, 255, 0),
-            Color::Blue => color::Rgb(0, 0, 255),
-            Color::Magenta => color::Rgb(255, 0, 255),
-            Color::Cyan => color::Rgb(0, 255, 255),
-            Color::White => color::Rgb(255, 255, 255),
-            Color::LightBlack => color::Rgb(128, 128, 128),
-            Color::LightRed => color::Rgb(255, 128, 128),
-            Color::LightGreen => color::Rgb(128, 255, 128),
-            Color::LightYellow => color::Rgb(255, 255, 128),
-            Color::LightBlue => color::Rgb(128, 128, 255),
-            Color::LightMagenta => color::Rgb(255, 128, 255),
-            Color::LightCyan => color::Rgb(128, 255, 255),
-            Color::LightWhite => color::Rgb(255, 255, 255),
-        }
+    pub fn to_rgb(&self) -> Rgb {
+        return match self {
+            Color::Black => Rgb(0, 0, 0),
+            Color::Red => Rgb(255, 0, 0),
+            Color::Green => Rgb(0, 255, 0),
+            Color::Yellow => Rgb(255, 255, 0),
+            Color::Blue => Rgb(0, 0, 255),
+            Color::Magenta => Rgb(255, 0, 255),
+            Color::Cyan => Rgb(0, 255, 255),
+            Color::White => Rgb(255, 255, 255),
+            Color::LightBlack => Rgb(128, 128, 128),
+            Color::LightRed => Rgb(255, 128, 128),
+            Color::LightGreen => Rgb(128, 255, 128),
+            Color::LightYellow => Rgb(255, 255, 128),
+            Color::LightBlue => Rgb(128, 128, 255),
+            Color::LightMagenta => Rgb(255, 128, 255),
+            Color::LightCyan => Rgb(128, 255, 255),
+            Color::LightWhite => Rgb(255, 255, 255),
+        };
     }
 }

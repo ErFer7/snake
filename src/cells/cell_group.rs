@@ -23,7 +23,7 @@ impl CellGroup {
 
     pub fn render(&mut self, cell_matrix: &mut CellMatrix) {
         for (vector, cell) in &self.cells {
-            cell_matrix.set_cell(vector.clone(), cell.clone());
+            cell_matrix.set_cell(vector, cell.clone());
         }
 
         self.strip_empty();

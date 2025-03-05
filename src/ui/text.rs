@@ -4,31 +4,35 @@ use crate::cells::cell_group::CellGroup;
 use crate::cells::cell_matrix::CellMatrix;
 use crate::cells::{cell::Cell, vector::Vector};
 
-use super::ui_element::{Alignment, UiElement};
+use super::ui_element::{Orientation, UiElement};
 
 pub struct Text {
     ui_element: UiElement,
     string: String,
-    color: Rgb,
+    bg_color: Rgb,
+    fg_color: Rgb,
 }
 
 impl Text {
     pub fn new(
         name: String,
         position: Vector<i32>,
-        alignment: Alignment,
+        anchor: Orientation,
+        alignment: Orientation,
         string: String,
         cell_matrix_width: u16,
         cell_matrix_height: u16,
-        color: Rgb,
+        bg_color: Rgb,
+        fg_color: Rgb,
     ) -> Text {
         let size = calculated_string_box_size(&string);
         let width = size.0;
-        let height = size.1;
+        let height: u16 = size.1;
         let mut ui_element = UiElement::new(
             name,
             position,
-            alignment.clone(),
+            anchor,
+            alignment,
             width,
             height,
             cell_matrix_width,
@@ -42,13 +46,15 @@ impl Text {
             width,
             height,
             string.clone(),
-            color,
+            bg_color,
+            fg_color,
         );
 
         return Text {
             ui_element,
             string,
-            color,
+            bg_color,
+            fg_color,
         };
     }
 
@@ -57,13 +63,28 @@ impl Text {
     }
 
     pub fn set_string(&mut self, string: String) {
+        let resize = self.string.len() == string.len();
+
         self.string = string;
+
+        if resize {
+            let size = calculated_string_box_size(&self.string);
+
+            self.ui_element.set_width(size.0);
+            self.ui_element.set_height(size.1);
+        }
 
         self.update_cell_group_wrapper();
     }
 
-    pub fn set_color(&mut self, color: Rgb) {
-        self.color = color;
+    pub fn set_bg_color(&mut self, color: Rgb) {
+        self.bg_color = color;
+
+        self.update_cell_group_wrapper();
+    }
+
+    pub fn set_fg_color(&mut self, color: Rgb) {
+        self.fg_color = color;
 
         self.update_cell_group_wrapper();
     }
@@ -83,7 +104,8 @@ impl Text {
             width,
             height,
             self.string.clone(),
-            self.color,
+            self.bg_color,
+            self.fg_color,
         );
     }
 }
@@ -111,13 +133,13 @@ fn update_cell_group(
     width: u16,
     height: u16,
     string: String,
-    color: Rgb,
+    bg_color: Rgb,
+    fg_color: Rgb,
 ) {
     let mut string_index = 0;
 
     for y in 0..height {
         for x in 0..width {
-            // TODO: Handle string resizing
             let character = string.chars().nth(string_index);
 
             if character == Some('\n') {
@@ -125,7 +147,7 @@ fn update_cell_group(
             }
 
             let cell = match string.chars().nth(string_index) {
-                Some(ch) => Cell::new_typeless(ch, color),
+                Some(ch) => Cell::new_typeless(ch, bg_color, fg_color),
                 None => Cell::new_colorless(' '),
             };
 

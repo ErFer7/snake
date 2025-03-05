@@ -18,7 +18,7 @@ impl CellMatrix {
             for x in 0..width {
                 let empty_cell = Cell::new_empty();
 
-                print_buffer.push(empty_cell.to_string(Vector::<u16>::new(x, y)));
+                print_buffer.push(empty_cell.to_string(&Vector::<u16>::new(x, y)));
                 matrix.push(empty_cell);
             }
         }
@@ -32,35 +32,30 @@ impl CellMatrix {
     }
 
     pub fn width(&self) -> u16 {
-        self.width
+        return self.width;
     }
 
     pub fn height(&self) -> u16 {
-        self.height
+        return self.height;
     }
 
-    pub fn set_cell(&mut self, position: Vector<u16>, cell: Cell) {
-        let index = self.get_index(position.clone());
-
-        self.print_buffer.push(cell.to_string(position));
-        self.matrix[index] = cell;
-    }
-
-    pub fn get_cell(&self, position: Vector<u16>) -> Option<&Cell> {
-        if !self.is_in_bounds(position.clone()) {
+    pub fn get_cell(&self, position: &Vector<u16>) -> Option<&Cell> {
+        if !self.is_in_bounds(position) {
             return None;
         }
 
+        return Some(&self.matrix[self.get_index(position)]);
+    }
+
+    pub fn set_cell(&mut self, position: &Vector<u16>, cell: Cell) {
+        if !self.is_in_bounds(position) {
+            return;
+        }
+
         let index = self.get_index(position);
-        Some(&self.matrix[index])
-    }
 
-    fn get_index(&self, position: Vector<u16>) -> usize {
-        return (position.y() * self.width + position.x()) as usize;
-    }
-
-    fn is_in_bounds(&self, position: Vector<u16>) -> bool {
-        position.x() < self.width && position.y() < self.height
+        self.print_buffer.push(cell.to_string(position));
+        self.matrix[index] = cell;
     }
 
     pub fn write(&mut self, terminal: &mut Terminal) {
@@ -74,8 +69,16 @@ impl CellMatrix {
     pub fn clear(&mut self) {
         for y in 0..self.height {
             for x in 0..self.width {
-                self.set_cell(Vector::<u16>::new(x, y), Cell::new_empty());
+                self.set_cell(&Vector::<u16>::new(x, y), Cell::new_empty());
             }
         }
+    }
+
+    fn get_index(&self, position: &Vector<u16>) -> usize {
+        return (position.y() * self.width + position.x()) as usize;
+    }
+
+    fn is_in_bounds(&self, position: &Vector<u16>) -> bool {
+        return position.x() < self.width && position.y() < self.height;
     }
 }

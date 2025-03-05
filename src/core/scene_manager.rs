@@ -11,36 +11,34 @@ pub struct SceneManager {
 }
 
 impl SceneManager {
-    pub fn new() -> Self {
-        Self {
+    pub fn new() -> SceneManager {
+        return SceneManager {
             scenes: HashMap::new(),
             current_scene: None,
             exit: false,
-        }
+        };
     }
 
     pub fn current_scene_mut(&mut self) -> &mut Option<Box<dyn Scene>> {
         return &mut self.current_scene;
     }
 
-    pub fn add_scene(&mut self, scene: Box<dyn Scene>) {
-        self.scenes.insert(scene.name(), scene);
-    }
-
     pub fn set_current_scene(&mut self, name: &str) {
-        if let Some(scene) = self.scenes.remove(name) {
-            if let Some(previous_scene) = self.current_scene.take() {
-                let previous_name = previous_scene.name();
-                self.scenes.insert(previous_name, previous_scene);
-            }
-
-            self.current_scene = Some(scene);
-            self.current_scene.as_mut().unwrap().render();
+        if let Some(previous_scene) = self.current_scene.take() {
+            let previous_name = previous_scene.name();
+            self.scenes.insert(previous_name, previous_scene);
         }
+
+        self.current_scene = self.scenes.remove(name);
+        self.current_scene.as_mut().unwrap().render();
     }
 
     pub fn exit(&self) -> bool {
         return self.exit;
+    }
+
+    pub fn add_scene(&mut self, scene: Box<dyn Scene>) {
+        self.scenes.insert(scene.name(), scene);
     }
 
     pub fn handle_update_result(&mut self, event: Event) {
@@ -103,6 +101,6 @@ impl SceneManager {
         self.scenes
             .get_mut("game_over")
             .unwrap()
-            .set_text("score", format!("{:010}", score));
+            .set_text_string("score", format!("{:010}", score));
     }
 }
